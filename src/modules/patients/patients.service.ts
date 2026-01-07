@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Injectable, BadGatewayException } from '@nestjs/common';
 import { ForwardHeaders, ListPatientsPayload } from './patients.dto';
 
@@ -29,8 +29,19 @@ export class PatientsService {
       );
 
       return response.data;
-    } catch (err: any) {
-      throw new BadGatewayException(err?.response?.data ?? 'Failed to fetch patients list');
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<unknown>;
+
+        throw new BadGatewayException(axiosError.response?.data ?? 'Failed to fetch patients list');
+      }
+
+      throw new BadGatewayException({
+        message: 'Upstream service error',
+        code: 'PHP_PATIENTS_LIST_FAILED',
+      });
+
+      throw new BadGatewayException('Failed to fetch patients list');
     }
   }
 }

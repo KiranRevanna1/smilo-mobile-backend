@@ -2,13 +2,17 @@ import { Controller, Post, Headers, Body, BadRequestException } from '@nestjs/co
 import type { IncomingHttpHeaders } from 'http';
 import { SubmissionsService } from './submissions.service';
 import { SubmitConsultDto } from './submissions.dto';
+import type { SubmitConsultResponse } from './submissions.types';
 
 @Controller('consult')
 export class SubmissionsController {
   constructor(private readonly submissionsService: SubmissionsService) {}
 
   @Post('submissions')
-  async submit(@Body() body: SubmitConsultDto, @Headers() headers: IncomingHttpHeaders) {
+  async submit(
+    @Body() body: SubmitConsultDto,
+    @Headers() headers: IncomingHttpHeaders,
+  ): Promise<SubmitConsultResponse> {
     const bearer = headers.authorization;
 
     if (!bearer || !bearer.startsWith('Bearer ')) {

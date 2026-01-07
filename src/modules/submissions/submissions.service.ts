@@ -1,10 +1,11 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import axios from 'axios';
+import axios, { type AxiosError, type AxiosResponse } from 'axios';
 import type { ForwardHeaders } from './submissions.dto';
+import type { SubmitConsultResponse } from './submissions.types';
 
 @Injectable()
 export class SubmissionsService {
-  async submit(edata: string, headers: ForwardHeaders) {
+  async submit(edata: string, headers: ForwardHeaders): Promise<SubmitConsultResponse> {
     const BASE = process.env.PHP_BASE_URL;
     const APP_TOKEN = process.env.PHP_APP_ACCESS_TOKEN;
 
@@ -13,7 +14,7 @@ export class SubmissionsService {
     }
 
     try {
-      const response = await axios.post(
+      const response: AxiosResponse<SubmitConsultResponse> = await axios.post(
         `${BASE}/api/app/v2/consult/submissions`,
         { edata },
         {
@@ -28,7 +29,15 @@ export class SubmissionsService {
       );
 
       return response.data;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<unknown>;
+
+        throw new InternalServerErrorException(
+          axiosError.response?.data ?? 'Failed to submit consult',
+        );
+      }
+
       throw new InternalServerErrorException('Failed to submit consult');
     }
   }

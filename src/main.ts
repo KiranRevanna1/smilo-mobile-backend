@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
-import type { Request, Response, NextFunction } from 'express';
+import type { Express, Request, Response, NextFunction } from 'express';
+import helmet from 'helmet';
+
+import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -15,7 +16,7 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  const server = app.getHttpAdapter().getInstance();
+  const server = app.getHttpAdapter().getInstance() as Express;
   server.set('trust proxy', 1);
 
   app.use((req: Request, res: Response, next: NextFunction): void => {
@@ -55,4 +56,7 @@ async function bootstrap(): Promise<void> {
   await app.listen(port);
 }
 
-bootstrap();
+bootstrap().catch((error: unknown) => {
+  console.error('Failed to bootstrap NestJS application', error);
+  process.exit(1);
+});
