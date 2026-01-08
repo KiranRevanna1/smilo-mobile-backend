@@ -13,6 +13,7 @@ import type { Express } from 'express';
 
 import { UploadImageService } from './uploadImage.service';
 import { UploadImageBodyDto } from './uplodImage.dto';
+import type { UploadImageResponse } from './uploadImage.types';
 
 @Controller('uploadImage')
 export class UploadImageController {
@@ -28,7 +29,7 @@ export class UploadImageController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: UploadImageBodyDto,
     @Headers() headers: IncomingHttpHeaders,
-  ) {
+  ): Promise<UploadImageResponse> {
     if (!file) {
       throw new BadRequestException('image file is required');
     }

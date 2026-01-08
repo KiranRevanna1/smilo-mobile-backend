@@ -1,17 +1,22 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import axios from 'axios';
+import { Injectable } from '@nestjs/common';
+import axios, { type AxiosResponse } from 'axios';
 import qs from 'qs';
 import { LoginDto, ForgotPasswordDto } from './auth.dto';
+import type { LoginResponse, ForgotPasswordResponse } from './auth.types';
 
 @Injectable()
 export class AuthService {
-  async login(body: LoginDto) {
-    const response = await axios.post(`${process.env.PHP_BASE_URL}/api/app/v2/user/login`, body, {
-      headers: {
-        'Content-Type': 'application/json',
-        'App-Access-Token': process.env.PHP_APP_ACCESS_TOKEN!,
+  async login(body: LoginDto): Promise<LoginResponse> {
+    const response: AxiosResponse<LoginResponse> = await axios.post(
+      `${process.env.PHP_BASE_URL}/api/app/v2/user/login`,
+      body,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'App-Access-Token': process.env.PHP_APP_ACCESS_TOKEN!,
+        },
       },
-    });
+    );
 
     return response.data;
   }
@@ -19,14 +24,13 @@ export class AuthService {
 
 @Injectable()
 export class ForgotPasswordService {
-  async forward(body: ForgotPasswordDto) {
+  async forward(body: ForgotPasswordDto): Promise<ForgotPasswordResponse> {
     const BASE = process.env.PHP_BASE_URL;
-
     if (!BASE) {
       throw new Error('PHP_BASE_URL not configured');
     }
 
-    const session = await axios.get(`${BASE}/auth/login`, {
+    const session = await axios.get<string>(`${BASE}/auth/login`, {
       withCredentials: true,
       headers: {
         'User-Agent': 'Mozilla/5.0',
@@ -51,17 +55,21 @@ export class ForgotPasswordService {
       chosen_practice_id: '',
     });
 
-    const response = await axios.post(`${BASE}/auth/forgot_password`, payload, {
-      withCredentials: true,
-      headers: {
-        Cookie: cookies,
-        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        Accept: 'application/json',
-        Origin: BASE,
-        Referer: `${BASE}/auth/login`,
-        'User-Agent': 'Mozilla/5.0',
+    const response: AxiosResponse<ForgotPasswordResponse> = await axios.post(
+      `${BASE}/auth/forgot_password`,
+      payload,
+      {
+        withCredentials: true,
+        headers: {
+          Cookie: cookies,
+          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+          Accept: 'application/json',
+          Origin: BASE,
+          Referer: `${BASE}/auth/login`,
+          'User-Agent': 'Mozilla/5.0',
+        },
       },
-    });
+    );
 
     return response.data;
   }
